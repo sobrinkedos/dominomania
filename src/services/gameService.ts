@@ -1,6 +1,6 @@
 import { supabase } from '@/lib/supabase';
-import { activityService } from './activityService';
 import { TableNames } from '@/utils/tableNames';
+import { activityService } from './activityService';
 
 export type VictoryType = 
     | 'simple' // 1 ponto
@@ -99,13 +99,13 @@ export const gameService = {
 
                 // Buscar informações dos jogadores do time 1
                 const { data: team1Players } = await supabase
-                    .from('players')
+                    .from(TableNames.PLAYERS)
                     .select('name')
                     .in('id', newGame.team1);
 
                 // Buscar informações dos jogadores do time 2
                 const { data: team2Players } = await supabase
-                    .from('players')
+                    .from(TableNames.PLAYERS)
                     .select('name')
                     .in('id', newGame.team2);
 
@@ -339,13 +339,13 @@ export const gameService = {
 
                 // Buscar informações dos jogadores do time 1
                 const { data: team1Players } = await supabase
-                    .from('players')
+                    .from(TableNames.PLAYERS)
                     .select('name')
                     .in('id', game.team1);
 
                 // Buscar informações dos jogadores do time 2
                 const { data: team2Players } = await supabase
-                    .from('players')
+                    .from(TableNames.PLAYERS)
                     .select('name')
                     .in('id', game.team2);
 
@@ -464,7 +464,7 @@ export const gameService = {
             if (userError) throw userError;
 
             const { data: playerData, error: playerError } = await supabase
-                .from('players')
+                .from(TableNames.PLAYERS)
                 .select('id')
                 .eq('created_by', userData.user.id);
 
@@ -663,8 +663,8 @@ export const gameService = {
         try {
             // Busca jogos onde o jogador está em qualquer time
             const { data, error } = await supabase
-                .from('games')
-                .select('*, competitions(id, name)')
+                .from(TableNames.GAMES)
+                .select(`*, ${TableNames.COMPETITIONS}(id, name)`)
                 .or(`team1.cs.{${playerId}},team2.cs.{${playerId}}`)
                 .order('created_at', { ascending: false });
 

@@ -167,7 +167,7 @@ export default function ProfileScreen() {
       // Se tiver um número de telefone, verifica se existe jogador com este número
       if (profile.phone_number) {
         const { data: existingPlayer, error: playerError } = await supabase
-          .from('players')
+          .from(TableNames.PLAYERS)
           .select('id, name, phone')
           .eq('phone', profile.phone_number)
           .single();
@@ -180,7 +180,7 @@ export default function ProfileScreen() {
         if (existingPlayer) {
           // Verifica se o usuário já está vinculado a este jogador
           const { data: existingRelation, error: relationCheckError } = await supabase
-            .from('user_player_relations')
+            .from(TableNames.USER_PLAYER_RELATIONS)
             .select('*')
             .eq('user_id', user?.id)
             .eq('player_id', existingPlayer.id)
@@ -233,7 +233,7 @@ export default function ProfileScreen() {
             if (userWantsToLink) {
               // Vincular usuário ao jogador existente
               const { error: relationError } = await supabase
-                .from('user_player_relations')
+                .from(TableNames.USER_PLAYER_RELATIONS)
                 .insert({
                   user_id: user?.id,
                   player_id: existingPlayer.id,
@@ -282,7 +282,7 @@ export default function ProfileScreen() {
         } else {
           // Se não existir jogador com este número, cria um novo
           const { data: newPlayer, error: createPlayerError } = await supabase
-            .from('players')
+            .from(TableNames.PLAYERS)
             .insert({
               name: profile.full_name,
               phone: profile.phone_number,
@@ -299,7 +299,7 @@ export default function ProfileScreen() {
 
           // Vincular usuário ao novo jogador como proprietário principal
           const { error: relationError } = await supabase
-            .from('user_player_relations')
+            .from(TableNames.USER_PLAYER_RELATIONS)
             .insert({
               user_id: user?.id,
               player_id: newPlayer.id,

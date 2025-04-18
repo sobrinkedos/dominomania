@@ -10,6 +10,7 @@ import { useTheme } from 'styled-components/native';
 import { format } from 'date-fns';
 import { pt } from 'date-fns/locale';
 import { supabase } from '@/lib/supabase';
+import { TableNames } from '@/utils/tableNames';
 
 type Game = {
     id: string;
@@ -218,7 +219,7 @@ export default function PlayerGames() {
             // Buscar nomes de todos os jogadores
             if (playerIds.size > 0) {
                 const { data: playersData } = await supabase
-                    .from('players')
+                    .from(TableNames.PLAYERS)
                     .select('id, name')
                     .in('id', Array.from(playerIds));
                 

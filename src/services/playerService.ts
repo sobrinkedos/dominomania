@@ -476,7 +476,7 @@ class PlayerService {
                         
                         // Atualizar diretamente na tabela players
                         const { error: updateError } = await supabase
-                            .from('players')
+                            .from(TableNames.PLAYERS)
                             .update({ avatar_url: avatarUrl })
                             .eq('id', playerId);
                         

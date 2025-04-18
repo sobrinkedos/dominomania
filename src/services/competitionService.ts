@@ -1,6 +1,6 @@
 import { supabase } from '@/lib/supabase';
-import { activityService } from './activityService';
 import { TableNames } from '@/utils/tableNames';
+import { activityService } from './activityService';
 
 export interface Competition {
     id: string;
@@ -246,7 +246,7 @@ export const competitionService = {
 
             // Busca os jogadores
             const { data: players, error: playersError } = await supabase
-                .from('players')
+                .from(TableNames.PLAYERS)
                 .select('id, name, phone')
                 .in('id', members.map(m => m.player_id));
 
@@ -327,7 +327,7 @@ export const competitionService = {
     async getPlayerById(playerId: string) {
         try {
             const { data, error } = await supabase
-                .from('players')
+                .from(TableNames.PLAYERS)
                 .select('*')
                 .eq('id', playerId)
                 .single();

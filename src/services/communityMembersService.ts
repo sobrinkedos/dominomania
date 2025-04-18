@@ -1,4 +1,5 @@
 import { supabase } from '@/lib/supabase';
+import { TableNames } from '@/utils/tableNames';
 
 export interface CommunityMember {
     id: string;
@@ -128,7 +129,7 @@ export const communityMembersService = {
             try {
                 // Buscar os telefones dos jogadores adicionados
                 const { data: players } = await supabase
-                    .from('players')
+                    .from(TableNames.PLAYERS)
                     .select('phone')
                     .in('id', playerIds)
                     .not('phone', 'is', null);
