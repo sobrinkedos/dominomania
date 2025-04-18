@@ -9,6 +9,7 @@ import { PageTransition } from '@/components/Transitions';
 import { Header } from '@/components/Header';
 import { useTheme } from 'styled-components/native';
 import AlertModal from '@/components/AlertModal';
+import { TableNames } from '@/utils/tableNames';
 
 const Container = styled.View`
   flex: 1;
@@ -95,7 +96,7 @@ export default function ProfileScreen() {
       }
 
       const { data, error } = await supabase
-        .from('user_profiles')
+        .from(TableNames.USER_PROFILES)
         .select('full_name, nickname, phone_number')
         .eq('user_id', user.id)
         .single();
@@ -104,7 +105,7 @@ export default function ProfileScreen() {
         if (error.code === 'PGRST116') {
           console.log('Perfil não encontrado, criando novo perfil...');
           const { error: insertError } = await supabase
-            .from('user_profiles')
+            .from(TableNames.USER_PROFILES)
             .insert([
               { 
                 user_id: user.id,
@@ -330,7 +331,7 @@ export default function ProfileScreen() {
 
       // Atualiza o perfil do usuário
       const { data: updatedProfile, error: updateError } = await supabase
-        .from('user_profiles')
+        .from(TableNames.USER_PROFILES)
         .update({
           full_name: profile.full_name,
           nickname: profile.nickname,

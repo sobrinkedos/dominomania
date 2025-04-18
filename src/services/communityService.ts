@@ -208,7 +208,7 @@ class CommunityService {
                 
                 // Buscar o telefone do usuário para adicioná-lo como admin do grupo
                 const { data: userProfile } = await supabase
-                    .from('user_profiles')
+                    .from(TableNames.USER_PROFILES)
                     .select('phone')
                     .eq('user_id', userId)
                     .single();
