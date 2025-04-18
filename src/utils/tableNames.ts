@@ -30,6 +30,9 @@ export const TableNames = {
   
   // Tabelas de atividades
   ACTIVITIES: `${prefix}activities`,
+  
+  // Tabelas de integração com WhatsApp
+  WHATSAPP_GROUP_LINKS: `${prefix}whatsapp_group_links`,
 };
 
 // Função auxiliar para obter o nome da tabela

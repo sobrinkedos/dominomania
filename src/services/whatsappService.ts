@@ -1,4 +1,5 @@
 import { supabase } from '@/lib/supabase';
+import { TableNames } from '@/utils/tableNames';
 
 export interface WhatsappGroupLink {
   id: string;
@@ -26,7 +27,7 @@ class WhatsappService {
   async getGroupLinksByCommunity(communityId: string) {
     try {
       const { data, error } = await supabase
-        .from('whatsapp_group_links')
+        .from(TableNames.WHATSAPP_GROUP_LINKS)
         .select('*')
         .eq('community_id', communityId)
         .order('created_at', { ascending: false });
@@ -46,7 +47,7 @@ class WhatsappService {
   async createGroupLink(data: CreateWhatsappGroupLinkDTO) {
     try {
       const { data: newLink, error } = await supabase
-        .from('whatsapp_group_links')
+        .from(TableNames.WHATSAPP_GROUP_LINKS)
         .insert([
           {
             ...data,
@@ -73,7 +74,7 @@ class WhatsappService {
   async updateGroupLink(id: string, updates: UpdateWhatsappGroupLinkDTO) {
     try {
       const { data, error } = await supabase
-        .from('whatsapp_group_links')
+        .from(TableNames.WHATSAPP_GROUP_LINKS)
         .update({
           ...updates,
           updated_at: new Date().toISOString()
@@ -97,7 +98,7 @@ class WhatsappService {
   async deleteGroupLink(id: string) {
     try {
       const { error } = await supabase
-        .from('whatsapp_group_links')
+        .from(TableNames.WHATSAPP_GROUP_LINKS)
         .delete()
         .eq('id', id);
 

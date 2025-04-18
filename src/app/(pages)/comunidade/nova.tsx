@@ -14,9 +14,7 @@ export default function NovaComunidade() {
     const { colors } = useTheme();
     const [formData, setFormData] = useState({
         name: '',
-        description: '',
-        whatsapp_group_name: '',
-        whatsapp_group_link: ''
+        description: ''
     });
     const [loading, setLoading] = useState(false);
 
@@ -30,31 +28,15 @@ export default function NovaComunidade() {
             setLoading(true);
             const newCommunity = await communityService.create({
                 name: formData.name.trim(),
-                description: formData.description.trim(),
-                whatsapp_group_name: formData.whatsapp_group_name.trim(),
-                whatsapp_group_link: formData.whatsapp_group_link.trim()
+                description: formData.description.trim()
             });
             
-            // Se tiver link do WhatsApp, cria a integração
-            if (formData.whatsapp_group_link && formData.whatsapp_group_name && newCommunity) {
-                try {
-                    await whatsappService.createGroupLink({
-                        community_id: newCommunity.id,
-                        group_name: formData.whatsapp_group_name.trim(),
-                        invite_link: formData.whatsapp_group_link.trim()
-                    });
-                } catch (whatsappError) {
-                    console.error('Erro ao criar link do WhatsApp:', whatsappError);
-                    // Não impede a criação da comunidade se falhar
-                }
-            }
+            // A integração com WhatsApp será feita automaticamente no futuro
             
             // Limpa o formulário
             setFormData({
                 name: '',
-                description: '',
-                whatsapp_group_name: '',
-                whatsapp_group_link: ''
+                description: ''
             });
             
             // Redireciona para a página de comunidades
@@ -130,53 +112,7 @@ export default function NovaComunidade() {
                         />
                     </FormGroup>
 
-                    <FormGroup>
-                        <Label colors={colors}>Grupo do WhatsApp (opcional)</Label>
-                        <TextInput
-                            mode="outlined"
-                            value={formData.whatsapp_group_name}
-                            onChangeText={(text) => setFormData(prev => ({ ...prev, whatsapp_group_name: text }))}
-                            placeholder="Nome do grupo do WhatsApp"
-                            style={{
-                                backgroundColor: colors.backgroundDark,
-                            }}
-                            theme={{
-                                colors: {
-                                    primary: colors.primary,
-                                    text: colors.text,
-                                    placeholder: colors.gray300,
-                                    background: colors.backgroundDark,
-                                    surface: colors.backgroundDark,
-                                    onSurface: colors.text,
-                                    outline: colors.gray700,
-                                }
-                            }}
-                        />
-                    </FormGroup>
-
-                    <FormGroup>
-                        <Label colors={colors}>Link de convite do WhatsApp (opcional)</Label>
-                        <TextInput
-                            mode="outlined"
-                            value={formData.whatsapp_group_link}
-                            onChangeText={(text) => setFormData(prev => ({ ...prev, whatsapp_group_link: text }))}
-                            placeholder="https://chat.whatsapp.com/..."
-                            style={{
-                                backgroundColor: colors.backgroundDark,
-                            }}
-                            theme={{
-                                colors: {
-                                    primary: colors.primary,
-                                    text: colors.text,
-                                    placeholder: colors.gray300,
-                                    background: colors.backgroundDark,
-                                    surface: colors.backgroundDark,
-                                    onSurface: colors.text,
-                                    outline: colors.gray700,
-                                }
-                            }}
-                        />
-                    </FormGroup>
+                    {/* Os campos de WhatsApp foram removidos e serão cadastrados automaticamente no futuro */}
 
                     <SaveButton colors={colors} disabled={loading} onPress={handleSave}>
                         {loading ? (

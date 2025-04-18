@@ -15,12 +15,12 @@ export const communityMembersService = {
     async listMembers(communityId: string) {
         try {
             const { data, error } = await supabase
-                .from('community_members')
+                .from(TableNames.COMMUNITY_MEMBERS)
                 .select(`
                     id,
                     community_id,
                     player_id,
-                    players (
+                    ${TableNames.PLAYERS} (
                         id,
                         name
                     )
@@ -47,7 +47,7 @@ export const communityMembersService = {
         try {
             // Verifica se o membro já existe
             const { data: existingMember } = await supabase
-                .from('community_members')
+                .from(TableNames.COMMUNITY_MEMBERS)
                 .select('id')
                 .eq('community_id', communityId)
                 .eq('player_id', playerId)
@@ -58,7 +58,7 @@ export const communityMembersService = {
             }
 
             const { data, error } = await supabase
-                .from('community_members')
+                .from(TableNames.COMMUNITY_MEMBERS)
                 .insert([
                     { 
                         community_id: communityId, 
@@ -67,7 +67,7 @@ export const communityMembersService = {
                 ])
                 .select(`
                     *,
-                    players (
+                    ${TableNames.PLAYERS} (
                         id,
                         name
                     )

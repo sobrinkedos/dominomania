@@ -73,19 +73,38 @@ export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
         storage: storageAdapter,
         autoRefreshToken: true,
         persistSession: true,
-        detectSessionInUrl: true,
+        detectSessionInUrl: Platform.OS === 'web', // Apenas para web
         flowType: 'pkce',
+        debug: true, // Habilita logs detalhados de autenticação
         onAuthStateChange: (event, session) => {
-            console.log('Auth state change:', event);
+            console.log(`[Supabase Auth] Evento: ${event}`, session ? `Usuário: ${session.user.email}` : 'Sem sessão');
+            
             if (event === 'TOKEN_REFRESHED') {
-                console.log('Token atualizado com sucesso');
+                console.log('[Supabase Auth] Token atualizado com sucesso');
+                // Garantir que a sessão seja salva no armazenamento persistente
+                if (session) {
+                    const expiresAt = new Date(session.expires_at * 1000);
+                    console.log(`[Supabase Auth] Nova sessão válida até: ${expiresAt.toLocaleString()}`);
+                }
+            } else if (event === 'SIGNED_IN') {
+                console.log('[Supabase Auth] Usuário conectado com sucesso');
+                if (session) {
+                    console.log(`[Supabase Auth] Detalhes do usuário: ${session.user.email}`);
+                }
             } else if (event === 'SIGNED_OUT') {
-                console.log('Usuário desconectado');
-                // Clear any stored tokens
+                console.log('[Supabase Auth] Usuário desconectado');
+                // Limpar tokens armazenados
                 storageAdapter.removeItem('supabase.auth.token');
                 storageAdapter.removeItem('supabase.auth.refreshToken');
+                storageAdapter.removeItem('supabase.auth.expires_at');
             } else if (event === 'USER_UPDATED') {
-                console.log('Dados do usuário atualizados');
+                console.log('[Supabase Auth] Dados do usuário atualizados');
+            } else if (event === 'INITIAL_SESSION') {
+                console.log('[Supabase Auth] Sessão inicial carregada');
+                if (session) {
+                    const expiresAt = new Date(session.expires_at * 1000);
+                    console.log(`[Supabase Auth] Sessão válida até: ${expiresAt.toLocaleString()}`);
+                }
             }
         }
     },
