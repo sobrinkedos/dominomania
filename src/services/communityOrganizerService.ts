@@ -38,7 +38,7 @@ export const communityOrganizerService = {
 
             // Check if user is already an organizer
             const { data: existingOrganizer, error: existingError } = await supabase
-                .from('community_organizers')
+                .from(TableNames.COMMUNITY_ORGANIZERS)
                 .select('id')
                 .eq('community_id', communityId)
                 .eq('user_id', user.id)
@@ -52,7 +52,7 @@ export const communityOrganizerService = {
 
             // Add user as organizer
             const { data, error } = await supabase
-                .from('community_organizers')
+                .from(TableNames.COMMUNITY_ORGANIZERS)
                 .insert({
                     community_id: communityId,
                     user_id: user.id,
@@ -77,7 +77,7 @@ export const communityOrganizerService = {
     async removeOrganizer(communityId: string, userId: string) {
         try {
             const { error } = await supabase
-                .from('community_organizers')
+                .from(TableNames.COMMUNITY_ORGANIZERS)
                 .delete()
                 .eq('community_id', communityId)
                 .eq('user_id', userId);
@@ -94,7 +94,7 @@ export const communityOrganizerService = {
         try {
             // Buscar diretamente os perfis dos organizadores com uma única consulta
             const { data, error } = await supabase
-                .from('community_organizers')
+                .from(TableNames.COMMUNITY_ORGANIZERS)
                 .select(`
                     id,
                     community_id,
@@ -132,7 +132,7 @@ export const communityOrganizerService = {
     async isOrganizer(userId: string, communityId: string) {
         try {
             const { data, error } = await supabase
-                .from('community_organizers')
+                .from(TableNames.COMMUNITY_ORGANIZERS)
                 .select('id')
                 .eq('community_id', communityId)
                 .eq('user_id', userId)

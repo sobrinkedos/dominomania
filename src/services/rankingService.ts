@@ -321,7 +321,7 @@ export const rankingService = {
                     .eq('player_id', userId);
 
                 const { data: organizerCommunities } = await supabase
-                    .from('community_organizers')
+                    .from(TableNames.COMMUNITY_ORGANIZERS)
                     .select('community_id')
                     .eq('user_id', userId);
 

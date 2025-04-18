@@ -51,7 +51,7 @@ export const gamesService = {
 
             // Buscar comunidades onde o usuário é organizador
             const { data: organizerCommunities, error: organizerError } = await supabase
-                .from('community_organizers')
+                .from(TableNames.COMMUNITY_ORGANIZERS)
                 .select('community_id')
                 .eq('user_id', user.id);
 

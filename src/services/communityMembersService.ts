@@ -87,7 +87,7 @@ export const communityMembersService = {
             
             // Verificar se é organizador
             const { data: organizers, error: organizersError } = await supabase
-                .from('community_organizers')
+                .from(TableNames.COMMUNITY_ORGANIZERS)
                 .select('id')
                 .eq('community_id', communityId)
                 .eq('user_id', (await supabase.auth.getUser()).data.user?.id);

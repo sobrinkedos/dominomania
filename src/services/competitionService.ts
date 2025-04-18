@@ -880,7 +880,7 @@ export const competitionService = {
             // Buscar comunidades onde o usuário é organizador
             console.log('Buscando comunidades onde usuário é organizador...');
             const { data: organizedCommunities, error: organizedError } = await supabase
-                .from('community_organizers')
+                .from(TableNames.COMMUNITY_ORGANIZERS)
                 .select('community:community_id(id, name, created_by)')
                 .eq('user_id', user.user.id);
 

@@ -225,7 +225,7 @@ class CommunityService {
             // Adicionar o criador como organizador
             // Primeiro, verificar se já existe como organizador
             const { data: existingOrganizer, error: checkError } = await supabase
-                .from('community_organizers')
+                .from(TableNames.COMMUNITY_ORGANIZERS)
                 .select('id')
                 .eq('community_id', community.id)
                 .eq('user_id', userId)
@@ -239,7 +239,7 @@ class CommunityService {
             // Só adiciona se não existir ainda
             if (!existingOrganizer) {
                 const { error: organizerError } = await supabase
-                    .from('community_organizers')
+                    .from(TableNames.COMMUNITY_ORGANIZERS)
                     .insert([
                         {
                             community_id: community.id,
