@@ -481,6 +481,7 @@ export default function CommunityDetails() {
     const [members, setMembers] = useState<Member[]>([]);
     const [organizers, setOrganizers] = useState<CommunityOrganizer[]>([]);
     const [players, setPlayers] = useState<Player[]>([]);
+    const [availableMembers, setAvailableMembers] = useState<Player[]>([]);
     const [competitions, setCompetitions] = useState<Competition[]>([]);
     const [loading, setLoading] = useState(true);
     const [showMembers, setShowMembers] = useState(false);
@@ -509,22 +510,26 @@ export default function CommunityDetails() {
     });
 
     const toggleMembers = useCallback(() => {
-        setShowMembers(prev => !prev);
-        Animated.timing(rotateAnimMembers, {
-            toValue: showMembers ? 0 : 1,
-            duration: 300,
-            useNativeDriver: true
-        }).start();
-    }, [showMembers]);
+        setShowMembers(prev => {
+            Animated.timing(rotateAnimMembers, {
+                toValue: prev ? 0 : 1,
+                duration: 300,
+                useNativeDriver: true
+            }).start();
+            return !prev;
+        });
+    }, []);
 
     const toggleOrganizers = useCallback(() => {
-        setShowOrganizers(prev => !prev);
-        Animated.timing(rotateAnimOrganizers, {
-            toValue: showOrganizers ? 0 : 1,
-            duration: 300,
-            useNativeDriver: true
-        }).start();
-    }, [showOrganizers]);
+        setShowOrganizers(prev => {
+            Animated.timing(rotateAnimOrganizers, {
+                toValue: prev ? 0 : 1,
+                duration: 300,
+                useNativeDriver: true
+            }).start();
+            return !prev;
+        });
+    }, []);
 
     const openAddOrganizerSheet = useCallback(() => {
         console.log('Abrindo modal de organizadores');
@@ -605,6 +610,10 @@ export default function CommunityDetails() {
             console.log('Competições encontradas:', competitionsData);
             setCompetitions(competitionsData);
             setPlayers([...myPlayers, ...communityPlayers]);
+
+            // Buscar jogadores disponíveis para adicionar
+            const avail = await communityMembersService.listAvailableMembers(id);
+            setAvailableMembers(avail);
         } catch (error) {
             console.error('Erro ao carregar dados:', error);
             Alert.alert('Erro', 'Não foi possível carregar os dados da comunidade');
@@ -613,6 +622,10 @@ export default function CommunityDetails() {
             setRefreshing(false);
         }
     };
+
+    useEffect(() => {
+        loadData();
+    }, [id]);
 
     useEffect(() => {
         const loadOrganizers = async () => {
@@ -643,12 +656,19 @@ export default function CommunityDetails() {
     }, [community, user?.id]);
 
     useEffect(() => {
-        if (user?.id && organizers.length > 0) {
+        if (user?.id && community) {
+            // Verifica se o usuário é o criador da comunidade ou um organizador
+            const isCreator = community.created_by === user?.id;
             const userIsOrganizer = organizers.some(org => org.user_id === user?.id);
-            setIsOrganizer(userIsOrganizer);
+            setIsOrganizer(isCreator || userIsOrganizer);
+            
             console.log('Verificação de organizador:', {
                 userId: user?.id,
+                createdBy: community.created_by,
+                isCreator,
                 organizadores: organizers.map(org => org.user_id),
+                userIsOrganizer,
+                resultado: isCreator || userIsOrganizer,
                 isOrganizer: userIsOrganizer
             });
         }
@@ -701,7 +721,7 @@ export default function CommunityDetails() {
     };
 
     const handleSelectAll = () => {
-        const availablePlayers = players.filter(player => 
+        const availablePlayers = availableMembers.filter(player => 
             !members.some(member => member.player_id === player.id)
         );
         
@@ -719,11 +739,39 @@ export default function CommunityDetails() {
 
         try {
             setLoading(true);
-            await communityMembersService.addMembers(id, selectedPlayers);
+            
+            // Adicionar um jogador de cada vez
+            const results = [];
+            const errors = [];
+            
+            for (const playerId of selectedPlayers) {
+                try {
+                    console.log(`Adicionando jogador ${playerId}...`);
+                    const result = await communityMembersService.addMember(id, playerId);
+                    results.push(result);
+                    console.log(`Jogador ${playerId} adicionado com sucesso`);
+                } catch (error) {
+                    console.error(`Erro ao adicionar jogador ${playerId}:`, error);
+                    errors.push({ playerId, error });
+                }
+            }
+            
             setSelectedPlayers([]);
             closeAddMemberSheet();
             await loadData();
-            Alert.alert('Sucesso', 'Membros adicionados com sucesso!');
+            
+            if (errors.length > 0) {
+                if (results.length > 0) {
+                    Alert.alert(
+                        'Parcialmente concluído', 
+                        `${results.length} membro(s) adicionado(s) com sucesso. ${errors.length} não puderam ser adicionados.`
+                    );
+                } else {
+                    Alert.alert('Erro', 'Não foi possível adicionar os membros');
+                }
+            } else {
+                Alert.alert('Sucesso', 'Membros adicionados com sucesso!');
+            }
         } catch (error) {
             console.error('Erro ao adicionar membros:', error);
             Alert.alert('Erro', 'Não foi possível adicionar os membros');
@@ -1093,9 +1141,8 @@ export default function CommunityDetails() {
                     colors={colors}
                 />
                 <FlatList
-                    data={players.filter(player => 
-                        player.name.toLowerCase().includes(searchTerm.toLowerCase()) &&
-                        !members.some(member => member.player_id === player.id)
+                    data={availableMembers.filter(player => 
+                        player.name.toLowerCase().includes(searchTerm.toLowerCase())
                     )}
                     keyExtractor={item => item.id}
                     renderItem={({ item }) => (

@@ -1,5 +1,6 @@
 import { supabase } from '@/lib/supabase';
 import { TableNames } from '@/utils/tableNames';
+import type { Player } from '@/services/playerService';
 
 export interface CommunityMember {
     id: string;
@@ -16,11 +17,12 @@ export const communityMembersService = {
         try {
             const { data, error } = await supabase
                 .from(TableNames.COMMUNITY_MEMBERS)
+                // Alias para retornar relação como 'players'
                 .select(`
                     id,
                     community_id,
                     player_id,
-                    ${TableNames.PLAYERS} (
+                    players: ${TableNames.PLAYERS} (
                         id,
                         name
                     )
@@ -56,15 +58,30 @@ export const communityMembersService = {
             if (existingMember) {
                 throw new Error('Jogador já é membro desta comunidade');
             }
-
+            
+            // Obter o usuário atual
+            const userId = (await supabase.auth.getUser()).data.user?.id;
+            if (!userId) {
+                throw new Error('Usuário não autenticado');
+            }
+            
+            // Obter data atual para os campos created_at e updated_at
+            const now = new Date().toISOString();
+            
+            // Usar SQL direto para inserir com UUID gerado pelo PostgreSQL
+            const { data: insertResult, error: insertError } = await supabase.rpc('add_community_member_direct', {
+                p_community_id: communityId,
+                p_player_id: playerId
+            });
+            
+            if (insertError) {
+                console.error('Erro ao inserir membro via RPC:', insertError);
+                throw insertError;
+            }
+            
+            // Buscar o membro recém-adicionado
             const { data, error } = await supabase
                 .from(TableNames.COMMUNITY_MEMBERS)
-                .insert([
-                    { 
-                        community_id: communityId, 
-                        player_id: playerId 
-                    }
-                ])
                 .select(`
                     *,
                     ${TableNames.PLAYERS} (
@@ -72,6 +89,8 @@ export const communityMembersService = {
                         name
                     )
                 `)
+                .eq('community_id', communityId)
+                .eq('player_id', playerId)
                 .single();
 
             if (error) throw error;
@@ -84,78 +103,18 @@ export const communityMembersService = {
 
     async addMembers(communityId: string, playerIds: string[]) {
         try {
-            console.log('Adicionando membros...', { communityId, playerIds });
-            
-            // Verificar se é organizador
-            const { data: organizers, error: organizersError } = await supabase
-                .from(TableNames.COMMUNITY_ORGANIZERS)
-                .select('id')
-                .eq('community_id', communityId)
-                .eq('user_id', (await supabase.auth.getUser()).data.user?.id);
-
-            if (organizersError) {
-                console.error('Erro ao verificar organizador:', organizersError);
-                throw organizersError;
-            }
-
-            console.log('Verificação de organizador:', { organizers });
-
-            if (!organizers || organizers.length === 0) {
-                throw new Error('Usuário não é organizador da comunidade');
-            }
-
-            const { data, error } = await supabase
-                .from('community_members')
-                .insert(
-                    playerIds.map(playerId => ({
-                        community_id: communityId,
-                        player_id: playerId
-                    }))
-                )
-                .select(`
-                    *,
-                    players (
-                        id,
-                        name
-                    )
-                `);
-
-            if (error) {
-                console.error('Erro ao inserir membros:', error);
-                throw error;
-            }
-
-            // Integração com WhatsApp: adicionar membros ao grupo
-            try {
-                // Buscar os telefones dos jogadores adicionados
-                const { data: players } = await supabase
-                    .from(TableNames.PLAYERS)
-                    .select('phone')
-                    .in('id', playerIds)
-                    .not('phone', 'is', null);
-                
-                if (players && players.length > 0) {
-                    // Importação dinâmica para evitar dependência circular
-                    const { whatsappIntegrationService } = await import('./whatsappIntegrationService');
-                    
-                    // Filtrar apenas telefones válidos
-                    const phones = players
-                        .filter(player => player.phone && player.phone.trim() !== '')
-                        .map(player => player.phone);
-                    
-                    if (phones.length > 0) {
-                        // Adicionar os membros ao grupo do WhatsApp
-                        await whatsappIntegrationService.addMembersToGroup(communityId, phones);
-                    }
+            const results: CommunityMember[] = [];
+            for (const playerId of playerIds) {
+                try {
+                    const member = await this.addMember(communityId, playerId);
+                    results.push(member);
+                } catch (error) {
+                    console.error(`Erro ao adicionar jogador ${playerId}:`, error);
                 }
-            } catch (whatsappError) {
-                // Não interromper o fluxo se a integração com WhatsApp falhar
-                console.error('Erro na integração com WhatsApp:', whatsappError);
             }
-            
-            return data;
+            return results;
         } catch (error) {
-            console.error('Erro ao adicionar membros:', error);
+            console.error('Erro ao adicionar múltiplos membros:', error);
             throw error;
         }
     },
@@ -163,7 +122,7 @@ export const communityMembersService = {
     async removeMember(communityId: string, playerId: string) {
         try {
             const { error } = await supabase
-                .from('community_members')
+                .from(TableNames.COMMUNITY_MEMBERS)
                 .delete()
                 .eq('community_id', communityId)
                 .eq('player_id', playerId);
@@ -178,7 +137,7 @@ export const communityMembersService = {
     async isMember(communityId: string, playerId: string) {
         try {
             const { data, error } = await supabase
-                .from('community_members')
+                .from(TableNames.COMMUNITY_MEMBERS)
                 .select('id')
                 .eq('community_id', communityId)
                 .eq('player_id', playerId)
@@ -190,5 +149,36 @@ export const communityMembersService = {
             console.error('Erro ao verificar membro:', error);
             throw error;
         }
-    }
+    },
+
+    async listAvailableMembers(communityId: string): Promise<Player[]> {
+        try {
+            const userRes = await supabase.auth.getUser();
+            const userId = userRes.data.user?.id;
+            if (!userId) throw new Error('Usuário não autenticado');
+            // IDs de membros já adicionados
+            const { data: members, error: membersError } = await supabase
+                .from(TableNames.COMMUNITY_MEMBERS)
+                .select('player_id')
+                .eq('community_id', communityId);
+            if (membersError) throw membersError;
+            const memberIds = members.map(m => m.player_id);
+            // Jogadores criados pelo usuário
+            let query = supabase
+                .from(TableNames.PLAYERS)
+                .select('*')
+                .eq('created_by', userId);
+            if (memberIds.length > 0) {
+                // Ajuste para adicionar parênteses ao filtro not.in
+                const ids = memberIds.join(',');
+                query = query.not('id', 'in', `(${ids})`);
+            }
+            const { data: availablePlayers, error: availError } = await query;
+            if (availError) throw availError;
+            return availablePlayers || [];
+        } catch (error) {
+            console.error('Erro ao listar jogadores disponíveis:', error);
+            throw error;
+        }
+    },
 };
