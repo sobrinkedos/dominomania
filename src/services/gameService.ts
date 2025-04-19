@@ -192,7 +192,7 @@ export const gameService = {
             console.log('GameService: Registrando rodada:', { id, type, winnerTeam });
             
             const { data: game, error: getError } = await supabase
-                .from('games')
+                .from(TableNames.GAMES)
                 .select('*')
                 .eq('id', id)
                 .single();
@@ -304,7 +304,7 @@ export const gameService = {
             console.log('GameService: Atualizando jogo:', updateData);
 
             const { data: updatedGame, error: updateError } = await supabase
-                .from('games')
+                .from(TableNames.GAMES)
                 .update(updateData)
                 .eq('id', id)
                 .select()
@@ -430,7 +430,7 @@ export const gameService = {
     async listByCompetition(competitionId: string) {
         try {
             const { data, error } = await supabase
-                .from('games')
+                .from(TableNames.GAMES)
                 .select('*')
                 .eq('competition_id', competitionId)
                 .order('created_at', { ascending: false });
@@ -446,7 +446,7 @@ export const gameService = {
     async getById(id: string) {
         try {
             const { data, error } = await supabase
-                .from('games')
+                .from(TableNames.GAMES)
                 .select('*')
                 .eq('id', id)
                 .single();
@@ -477,7 +477,7 @@ export const gameService = {
             const playerIds = playerData.map(player => player.id);
 
             const { data, error } = await supabase
-                .from('games')
+                .from(TableNames.GAMES)
                 .select('*')
                 .or(`team1.cs.{${playerIds.join(',')}},team2.cs.{${playerIds.join(',')}}`)  // Filtra jogos onde o jogador está em qualquer time
                 .order('created_at', { ascending: false })
@@ -499,7 +499,7 @@ export const gameService = {
         try {
             // Primeiro, busca o jogo para verificar a competição
             const { data: game, error: gameError } = await supabase
-                .from('games')
+                .from(TableNames.GAMES)
                 .select('competition_id')
                 .eq('id', id)
                 .single();
@@ -522,7 +522,7 @@ export const gameService = {
 
             // Exclui o jogo
             const { error: deleteError } = await supabase
-                .from('games')
+                .from(TableNames.GAMES)
                 .delete()
                 .eq('id', id);
 
@@ -541,7 +541,7 @@ export const gameService = {
             
             // Buscar o jogo atual
             const { data: game, error: getError } = await supabase
-                .from('games')
+                .from(TableNames.GAMES)
                 .select('*')
                 .eq('id', id)
                 .single();
@@ -644,7 +644,7 @@ export const gameService = {
             console.log('GameService: Atualizando jogo após desfazer rodada:', updateData);
 
             const { data: updatedGame, error: updateError } = await supabase
-                .from('games')
+                .from(TableNames.GAMES)
                 .update(updateData)
                 .eq('id', id)
                 .select()

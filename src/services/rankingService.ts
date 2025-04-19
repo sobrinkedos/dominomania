@@ -357,7 +357,7 @@ export const rankingService = {
 
             // Buscar todos os jogos
             const { data: games, error: gamesError } = await supabase
-                .from('games')
+                .from(TableNames.GAMES)
                 .select('*')
                 .neq('status', 'pending');
 

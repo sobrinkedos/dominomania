@@ -227,7 +227,7 @@ export const competitionService = {
         try {
             // Busca os membros
             const { data: members, error: membersError } = await supabase
-                .from('competition_members')
+                .from(TableNames.COMPETITION_MEMBERS)
                 .select(`
                     competition_id,
                     player_id,
@@ -274,11 +274,19 @@ export const competitionService = {
     async addMember(competitionId: string, playerId: string) {
         try {
             console.log('Adicionando membro:', { competitionId, playerId });
+            // Buscar o usuário atual para usar como user_id
+            const { data: user } = await supabase.auth.getUser();
+            if (!user?.user?.id) {
+                throw new Error('Usuário não autenticado');
+            }
+
             const { data, error } = await supabase
-                .from('competition_members')
+                .from(TableNames.COMPETITION_MEMBERS)
                 .insert([{
                     competition_id: competitionId,
-                    player_id: playerId
+                    player_id: playerId,
+                    user_id: user.user.id,
+                    role: 'player'
                 }])
                 .select();
 
@@ -295,7 +303,7 @@ export const competitionService = {
     async removeMember(competitionId: string, playerId: string) {
         try {
             const { error } = await supabase
-                .from('competition_members')
+                .from(TableNames.COMPETITION_MEMBERS)
                 .delete()
                 .eq('competition_id', competitionId)
                 .eq('player_id', playerId);
@@ -310,7 +318,7 @@ export const competitionService = {
     async startCompetition(id: string) {
         try {
             const { data, error } = await supabase
-                .from('competitions')
+                .from(TableNames.COMPETITIONS)
                 .update({ status: 'in_progress' })
                 .eq('id', id)
                 .select()
@@ -370,7 +378,7 @@ export const competitionService = {
         try {
             // Busca todos os jogos da competição
             const { data: games, error: gamesError } = await supabase
-                .from('games')
+                .from(TableNames.GAMES)
                 .select('*')
                 .eq('competition_id', id);
 
@@ -523,7 +531,7 @@ export const competitionService = {
 
             // Atualiza o status da competição para finished
             const { error: updateError } = await supabase
-                .from('competitions')
+                .from(TableNames.COMPETITIONS)
                 .update({ status: 'finished' })
                 .eq('id', id);
 
@@ -531,7 +539,7 @@ export const competitionService = {
 
             // Buscar informações da competição
             const { data: competition } = await supabase
-                .from('competitions')
+                .from(TableNames.COMPETITIONS)
                 .select('*')
                 .eq('id', id)
                 .single();
@@ -674,7 +682,7 @@ export const competitionService = {
         try {
             // Busca todos os jogos da competição
             const { data: games, error: gamesError } = await supabase
-                .from('games')
+                .from(TableNames.GAMES)
                 .select('*')
                 .eq('competition_id', id);
 

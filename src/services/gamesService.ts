@@ -1,4 +1,5 @@
 import { supabase } from '@/lib/supabase';
+import { TableNames } from '@/utils/tableNames';
 
 export type GameWithDetails = {
     id: string;
@@ -92,7 +93,7 @@ export const gamesService = {
 
             // Buscar os jogos com os detalhes
             const { data: games, error: gamesError } = await supabase
-                .from('games')
+                .from(TableNames.GAMES)
                 .select(`
                     *,
                     competition:competitions!inner (

@@ -160,7 +160,7 @@ class WhatsappIntegrationService {
     try {
       // Buscar a competição para obter o ID da comunidade
       const { data: competition } = await supabase
-        .from('competitions')
+        .from(TableNames.COMPETITIONS)
         .select('community_id')
         .eq('id', game.competition_id)
         .single();
@@ -218,7 +218,7 @@ class WhatsappIntegrationService {
     try {
       // Buscar a competição para obter o ID da comunidade
       const { data: competition } = await supabase
-        .from('competitions')
+        .from(TableNames.COMPETITIONS)
         .select('community_id')
         .eq('id', game.competition_id)
         .single();
