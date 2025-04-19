@@ -905,7 +905,7 @@ export const competitionService = {
 
             // Buscar todas as competições dessas comunidades
             const { data: competitions, error: competitionsError } = await supabase
-                .from('competitions')
+                .from(TableNames.COMPETITIONS)
                 .select('*, community_id')
                 .in('community_id', communityIds)
                 .order('created_at', { ascending: false });

@@ -4,6 +4,7 @@ import { whatsappService, WhatsappGroupLink } from './whatsappService';
 import { Community } from './communityService';
 import { Competition, CompetitionResult } from './competitionService';
 import { Game } from './gameService';
+import { TableNames } from '@/utils/tableNames';
 
 /**
  * Serviço responsável pela integração com WhatsApp via N8N e Evolution API
